@@ -1,0 +1,12 @@
+# deployment
+pip>=19.2.3
+wheel>=0.33.6
+# runtime requirements
+# pinned so the bot can create PRs to test with new versions
+pydantic==1.10.2
+
+# test requirements
+coverage>=4.5.1
+pytest>=4.0.0
+pytest-cov>=2.5.1
+tox>=3.5.2
