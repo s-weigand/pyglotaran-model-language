@@ -29,9 +29,6 @@ ignore-init-module = true
 
 [tool.coverage.run]
 branch = true
-include = [
-  'pyglotaran_model_language/*',
-]
 omit = [
   'setup.py',
   'pyglotaran_model_language/__init__.py',

@@ -1,0 +1,762 @@
+{
+  "title": "Model",
+  "description": "pyglotaran model",
+  "type": "object",
+  "properties": {
+    "default_megacomplex": {
+      "title": "Default Megacomplex",
+      "description": "Megacomplex 'type' which is used when not defined on the megacomplex itself.",
+      "enum": [
+        "decay",
+        "decay-parallel",
+        "decay-sequential",
+        "damped-oscillation",
+        "spectral",
+        "coherent-artifact",
+        "baseline",
+        "clp-guide"
+      ],
+      "type": "string"
+    },
+    "irf": {
+      "title": "Irf",
+      "description": "Instrument Response Function (IRF).\n\nPossible values for 'type' are:\n * gaussian\n * multi-gaussian\n * spectral-gaussian\n * spectral-multi-gaussian",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Irf"
+      }
+    },
+    "dataset": {
+      "title": "Dataset",
+      "description": "Definition of the model specification for a dataset.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/DataSet"
+      }
+    },
+    "k_matrix": {
+      "title": "K Matrix",
+      "description": "Kinetic matrix.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/KMatrix"
+      }
+    },
+    "clp_penalties": {
+      "title": "Clp Penalties",
+      "description": "Additional penalty that should be applied to during optimization.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ClpPenalty"
+      }
+    },
+    "clp_constraints": {
+      "title": "Clp Constraints",
+      "description": "Instrument Response Function (IRF).\n\nPossible values for 'type' are:\n * zero\n * only",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ClpConstraint"
+      }
+    },
+    "clp_relations": {
+      "title": "Clp Relations",
+      "description": "Applies a relation between two clps.\n\n    The relation is applied as :math:`target = parameter * source`.\n    ",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ClpRelation"
+      }
+    }
+  },
+  "required": [
+    "dataset"
+  ],
+  "definitions": {
+    "IrfGaussian": {
+      "title": "IrfGaussian",
+      "description": "Instrument Response Function (IRF) consisting of a single gaussian.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "title": "Type",
+          "description": "Type of the IRF. \nPossible values are: \n * multi-gaussian\n * gaussian\n * spectral-gaussian\n * spectral-multi-gaussian",
+          "enum": [
+            "gaussian"
+          ],
+          "type": "string"
+        },
+        "shift": {
+          "title": "Shift",
+          "description": "List of relative shift parameter labels for each gaussian component.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "normalize": {
+          "title": "Normalize",
+          "description": "Whether or not to normalize the IRF to an area of one.",
+          "default": true,
+          "type": "boolean"
+        },
+        "backsweep": {
+          "title": "Backsweep",
+          "description": "Whether or not to apply backsweep to the IRF.",
+          "default": false,
+          "type": "boolean"
+        },
+        "backsweep_period": {
+          "title": "Backsweep Period",
+          "description": "Period of the Backsweep (only applied if ``backsweep`` is ``True``).",
+          "type": "string"
+        },
+        "center": {
+          "title": "Center",
+          "description": "Center positions of the gaussian.",
+          "type": "string"
+        },
+        "width": {
+          "title": "Width",
+          "description": "Width of the gaussian.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "center",
+        "width"
+      ],
+      "additionalProperties": false
+    },
+    "IrfMultiGaussian": {
+      "title": "IrfMultiGaussian",
+      "description": "Instrument Response Function (IRF) consisting of a super position of multiple gaussian's.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "title": "Type",
+          "description": "Type of the IRF. \nPossible values are: \n * multi-gaussian\n * gaussian\n * spectral-gaussian\n * spectral-multi-gaussian",
+          "default": "multi-gaussian",
+          "enum": [
+            "multi-gaussian",
+            "gaussian",
+            "spectral-gaussian",
+            "spectral-multi-gaussian"
+          ],
+          "type": "string"
+        },
+        "shift": {
+          "title": "Shift",
+          "description": "List of relative shift parameter labels for each gaussian component.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "normalize": {
+          "title": "Normalize",
+          "description": "Whether or not to normalize the IRF to an area of one.",
+          "default": true,
+          "type": "boolean"
+        },
+        "backsweep": {
+          "title": "Backsweep",
+          "description": "Whether or not to apply backsweep to the IRF.",
+          "default": false,
+          "type": "boolean"
+        },
+        "backsweep_period": {
+          "title": "Backsweep Period",
+          "description": "Period of the Backsweep (only applied if ``backsweep`` is ``True``).",
+          "type": "string"
+        },
+        "centers": {
+          "title": "Centers",
+          "description": "List of center position parameter labels for each gaussian component.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "widths": {
+          "title": "Widths",
+          "description": "List of width parameter labels for each gaussian component.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scales": {
+          "title": "Scales",
+          "description": "List of relative scale parameter labels for each gaussian component.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "centers",
+        "widths"
+      ],
+      "additionalProperties": false
+    },
+    "IrfSpectralGaussian": {
+      "title": "IrfSpectralGaussian",
+      "description": "Instrument Response Function (IRF) consisting of a single gaussian.",
+      "type": "object",
+      "properties": {
+        "dispersion_center": {
+          "title": "Dispersion Center",
+          "description": "Center positions of the dispersion on the global axis.",
+          "type": "string"
+        },
+        "center_dispersion_coefficients": {
+          "title": "Center Dispersion Coefficients",
+          "description": "Center positions of the dispersion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "width_dispersion_coefficients": {
+          "title": "Width Dispersion Coefficients",
+          "description": "Center positions of the dispersion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "model_dispersion_with_wavenumber": {
+          "title": "Model Dispersion With Wavenumber",
+          "description": "Whether to . Defaults to False",
+          "default": false,
+          "type": "boolean"
+        },
+        "type": {
+          "title": "Type",
+          "description": "Type of the IRF. \nPossible values are: \n * multi-gaussian\n * gaussian\n * spectral-gaussian\n * spectral-multi-gaussian",
+          "default": "spectral-gaussian",
+          "enum": [
+            "multi-gaussian",
+            "gaussian",
+            "spectral-gaussian",
+            "spectral-multi-gaussian"
+          ],
+          "type": "string"
+        },
+        "shift": {
+          "title": "Shift",
+          "description": "List of relative shift parameter labels for each gaussian component.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "normalize": {
+          "title": "Normalize",
+          "description": "Whether or not to normalize the IRF to an area of one.",
+          "default": true,
+          "type": "boolean"
+        },
+        "backsweep": {
+          "title": "Backsweep",
+          "description": "Whether or not to apply backsweep to the IRF.",
+          "default": false,
+          "type": "boolean"
+        },
+        "backsweep_period": {
+          "title": "Backsweep Period",
+          "description": "Period of the Backsweep (only applied if ``backsweep`` is ``True``).",
+          "type": "string"
+        },
+        "center": {
+          "title": "Center",
+          "description": "Center positions of the gaussian.",
+          "type": "string"
+        },
+        "width": {
+          "title": "Width",
+          "description": "Width of the gaussian.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "dispersion_center",
+        "center_dispersion_coefficients",
+        "width_dispersion_coefficients",
+        "center",
+        "width"
+      ],
+      "additionalProperties": false
+    },
+    "IrfSpectralMultiGaussian": {
+      "title": "IrfSpectralMultiGaussian",
+      "description": "Instrument Response Function (IRF) consisting of a single gaussian.",
+      "type": "object",
+      "properties": {
+        "dispersion_center": {
+          "title": "Dispersion Center",
+          "description": "Center positions of the dispersion on the global axis.",
+          "type": "string"
+        },
+        "center_dispersion_coefficients": {
+          "title": "Center Dispersion Coefficients",
+          "description": "Center positions of the dispersion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "width_dispersion_coefficients": {
+          "title": "Width Dispersion Coefficients",
+          "description": "Center positions of the dispersion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "model_dispersion_with_wavenumber": {
+          "title": "Model Dispersion With Wavenumber",
+          "description": "Whether to . Defaults to False",
+          "default": false,
+          "type": "boolean"
+        },
+        "type": {
+          "title": "Type",
+          "description": "Type of the IRF. \nPossible values are: \n * multi-gaussian\n * gaussian\n * spectral-gaussian\n * spectral-multi-gaussian",
+          "default": "spectral-multi-gaussian",
+          "enum": [
+            "multi-gaussian",
+            "gaussian",
+            "spectral-gaussian",
+            "spectral-multi-gaussian"
+          ],
+          "type": "string"
+        },
+        "shift": {
+          "title": "Shift",
+          "description": "List of relative shift parameter labels for each gaussian component.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "normalize": {
+          "title": "Normalize",
+          "description": "Whether or not to normalize the IRF to an area of one.",
+          "default": true,
+          "type": "boolean"
+        },
+        "backsweep": {
+          "title": "Backsweep",
+          "description": "Whether or not to apply backsweep to the IRF.",
+          "default": false,
+          "type": "boolean"
+        },
+        "backsweep_period": {
+          "title": "Backsweep Period",
+          "description": "Period of the Backsweep (only applied if ``backsweep`` is ``True``).",
+          "type": "string"
+        },
+        "center": {
+          "title": "Center",
+          "description": "Center positions of the gaussian.",
+          "type": "string"
+        },
+        "width": {
+          "title": "Width",
+          "description": "Width of the gaussian.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "dispersion_center",
+        "center_dispersion_coefficients",
+        "width_dispersion_coefficients",
+        "center",
+        "width"
+      ],
+      "additionalProperties": false
+    },
+    "Irf": {
+      "title": "Irf",
+      "description": "Instrument Response Function (IRF).\n\nPossible values for 'type' are:\n * gaussian\n * multi-gaussian\n * spectral-gaussian\n * spectral-multi-gaussian",
+      "discriminator": {
+        "propertyName": "type",
+        "mapping": {
+          "gaussian": "#/definitions/IrfSpectralMultiGaussian",
+          "multi-gaussian": "#/definitions/IrfSpectralMultiGaussian",
+          "spectral-gaussian": "#/definitions/IrfSpectralMultiGaussian",
+          "spectral-multi-gaussian": "#/definitions/IrfSpectralMultiGaussian"
+        }
+      },
+      "oneOf": [
+        {
+          "$ref": "#/definitions/IrfGaussian"
+        },
+        {
+          "$ref": "#/definitions/IrfMultiGaussian"
+        },
+        {
+          "$ref": "#/definitions/IrfSpectralGaussian"
+        },
+        {
+          "$ref": "#/definitions/IrfSpectralMultiGaussian"
+        }
+      ]
+    },
+    "DataSet": {
+      "title": "DataSet",
+      "description": "Definition of the model specification for a dataset.",
+      "type": "object",
+      "properties": {
+        "megacomplex": {
+          "title": "Megacomplex",
+          "description": "List of megacomplex labels defined in the 'megacomplex' section.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "initial_concentration": {
+          "title": "Initial Concentration",
+          "description": "Label of an ``initial_concentration`` in the 'initial_concentrations' section.",
+          "type": "string"
+        },
+        "irf": {
+          "title": "Irf",
+          "description": "Label of an ``irf`` in the 'irf' section.",
+          "type": "string"
+        },
+        "scale": {
+          "title": "Scale",
+          "description": "Relative scale of the dataset.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "megacomplex",
+        "initial_concentration"
+      ]
+    },
+    "MatrixElement": {
+      "title": "MatrixElement",
+      "description": "Mapping of matrix entry positions in to-from-notation to parameter labels.",
+      "type": "object",
+      "patternProperties": {
+        "^\\s*\\([a-zA-Z_][a-zA-Z0-9_]*\\s*,\\s*[a-zA-Z_][a-zA-Z0-9_]*\\s*\\)$": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "KMatrix": {
+      "title": "KMatrix",
+      "description": "Kinetic matrix.",
+      "type": "object",
+      "properties": {
+        "matrix": {
+          "$ref": "#/definitions/MatrixElement"
+        }
+      },
+      "required": [
+        "matrix"
+      ]
+    },
+    "EqualAreaPenalty": {
+      "title": "EqualAreaPenalty",
+      "description": "Forces the area of 2 clp to be the same.\n\nAn equal area constraint adds a the difference of the sum of a\ncompartments in the e matrix in one or more intervals to the scaled sum\nof the e matrix of one or more target compartments to residual. The additional\nresidual is scaled with the weight.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "title": "Type",
+          "description": "Type of the Clp Constraint. \nPossible values are: \n * equal_area",
+          "default": "equal_area",
+          "const": "equal_area",
+          "enum": [
+            "equal_area"
+          ],
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "description": "Label of the compartment the constraint should be applied to.",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "source_intervals": {
+          "title": "Source Intervals",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "target_intervals": {
+          "title": "Target Intervals",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "weight": {
+          "title": "Weight",
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "target",
+        "source",
+        "source_intervals",
+        "target_intervals",
+        "parameter",
+        "weight"
+      ],
+      "additionalProperties": false
+    },
+    "ClpPenalty": {
+      "title": "ClpPenalty",
+      "description": "Forces the area of 2 clp to be the same.\n\n    An equal area constraint adds a the difference of the sum of a\n    compartments in the e matrix in one or more intervals to the scaled sum\n    of the e matrix of one or more target compartments to residual. The additional\n    residual is scaled with the weight.\n    ",
+      "allOf": [
+        {
+          "$ref": "#/definitions/EqualAreaPenalty"
+        }
+      ]
+    },
+    "ZeroConstraint": {
+      "title": "ZeroConstraint",
+      "description": "Constraints the target to 0 in the given interval.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "title": "Type",
+          "description": "Type of the ClpConstraint. \nPossible values are: \n * zero\n * only",
+          "default": "zero",
+          "const": "zero",
+          "enum": [
+            "zero",
+            "only"
+          ],
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "description": "Label of the compartment the constraint should be applied to.",
+          "type": "string"
+        },
+        "interval": {
+          "title": "Interval",
+          "description": "Interval/s the ClpConstraint should be applied to. If omitted it applies to the full data range.",
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "OnlyConstraint": {
+      "title": "OnlyConstraint",
+      "description": "Constraints the target to 0 outside the given interval.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "title": "Type",
+          "description": "Type of the ClpConstraint. \nPossible values are: \n * zero\n * only",
+          "default": "only",
+          "const": "only",
+          "enum": [
+            "zero",
+            "only"
+          ],
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "description": "Label of the compartment the constraint should be applied to.",
+          "type": "string"
+        },
+        "interval": {
+          "title": "Interval",
+          "description": "Interval/s the ClpConstraint should be applied to. If omitted it applies to the full data range.",
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "ClpConstraint": {
+      "title": "ClpConstraint",
+      "description": "Instrument Response Function (IRF).\n\nPossible values for 'type' are:\n * zero\n * only",
+      "discriminator": {
+        "propertyName": "type",
+        "mapping": {
+          "zero": "#/definitions/OnlyConstraint",
+          "only": "#/definitions/OnlyConstraint"
+        }
+      },
+      "oneOf": [
+        {
+          "$ref": "#/definitions/ZeroConstraint"
+        },
+        {
+          "$ref": "#/definitions/OnlyConstraint"
+        }
+      ]
+    },
+    "ClpRelation": {
+      "title": "ClpRelation",
+      "description": "Applies a relation between two clps.\n\nThe relation is applied as :math:`target = parameter * source`.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "interval": {
+          "title": "Interval",
+          "description": "Interval/s the ClpRelation should be applied to. If omitted it applies to the full data range.",
+          "anyOf": [
+            {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "source",
+        "target",
+        "parameter"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
